@@ -1,3 +1,5 @@
+![Banner](banner.svg)
+
 # doc-gen
 
 Auto-generate a README for any codebase in seconds — language-aware, framework-detected, actually useful.
