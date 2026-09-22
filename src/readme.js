@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, lstatSync, openSync, fstatSync, ftruncateSync, closeSync, constants } from 'fs'
 import { join, resolve } from 'path'
 import { detectProject } from './detector.js'
 import {
@@ -173,23 +173,37 @@ export async function generateReadmeCommand(options = {}) {
   try {
     profile = detectProject(root)
   } catch (err) {
-    printError(`Failed to analyse project: ${err.message}`)
-    process.exit(1)
+    throw new Error(`Failed to analyse project: ${err.message}`)
   }
 
   const content = generateReadme(root, profile)
   const outPath = join(root, 'README.md')
 
   if (options.preview) {
-    printPreview(content)
+    printPreview(content, Infinity)
     return
   }
 
   try {
-    writeFileSync(outPath, content, 'utf-8')
+    let prior
+    try { prior = lstatSync(outPath) } catch (error) { if (error.code !== 'ENOENT') throw error }
+    if (prior && (!prior.isFile() || prior.isSymbolicLink() || prior.nlink !== 1)) {
+      throw new Error('README.md must be an unlinked regular file; refusing symlink, hardlink or non-file target')
+    }
+    const flags = prior
+      ? constants.O_WRONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK
+      : constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW
+    const fd = openSync(outPath, flags, 0o666)
+    try {
+      const current = fstatSync(fd)
+      if (!current.isFile() || current.nlink !== 1 || (prior && (current.dev !== prior.dev || current.ino !== prior.ino))) {
+        throw new Error('README.md target changed or is linked; refusing to write')
+      }
+      ftruncateSync(fd, 0)
+      writeFileSync(fd, content, 'utf-8')
+    } finally { closeSync(fd) }
     printSuccess(`README.md written to ${outPath}`)
   } catch (err) {
-    printError(`Could not write README.md: ${err.message}`)
-    process.exit(1)
+    throw new Error(`Could not write README.md: ${err.message}`)
   }
 }

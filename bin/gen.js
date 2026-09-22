@@ -2,4 +2,4 @@
 
 import { run } from '../src/index.js'
 
-run()
+process.exitCode = await run()

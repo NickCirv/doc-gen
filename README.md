@@ -1,43 +1,64 @@
-<div align="center">
+![doc-gen — Nicholas Ashkar repository collection](assets/nicholas-ashkar/banner.png)
 
 # doc-gen
 
-**Generate an accurate README for any codebase in seconds — language-aware, framework-detected.**
+Draft a README from a local project's manifest, scripts and framework hints.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue?labelColor=0B0A09)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?labelColor=0B0A09)](https://nodejs.org)
+> **Local repair candidate.** This checkout adds the missing command dispatcher to source revision `c419dbebba05cd3aa15420bcaf1117a01c028b20`. The repair has not been published upstream. See [repair evidence](REPAIR-REPORT.md).
 
-</div>
+## Quickstart
 
-## Install
+Use Node.js 20 or later. From this candidate checkout:
 
 ```bash
-npx github:NickCirv/doc-gen
+npm install --ignore-scripts --no-audit --no-fund
+node bin/gen.js --help
+node bin/gen.js readme --dir /absolute/path/to/project --preview
 ```
+
+Help and preview were exercised against temporary fixtures. Preview prints the complete draft without changing README.md. Review the draft before choosing to write it:
+
+```bash
+node bin/gen.js readme --dir /absolute/path/to/project
+```
+
+**The write command replaces an existing regular README.md.** Symlinks, multiply linked files and non-file targets are refused before truncation. Keep a copy or review it under version control before running it on an authored document.
 
 ## Usage
 
+| Command or option | Purpose | Default |
+| --- | --- | --- |
+| `readme` | Detect a project and assemble its README draft | Required for generation |
+| `--dir PATH` | Existing project directory | Current directory |
+| `--preview` | Print the full draft without writing | Off |
+| `--help` | Display supported command help | No generation |
+
+No arguments display help. Unknown commands, unknown options, missing values and invalid directories return a nonzero exit status. API-reference, directory-tree and changelog generation are not implemented by the captured modules; the dispatcher rejects those commands.
+
+## What the generator reads
+
+The detector inspects manifest names, dependencies, script entries, common config files and known entrypoint paths. It recognizes several language/framework conventions and uses these hints to produce installation, usage, script, testing, contribution and license sections. It does not execute the target project or verify those instructions.
+
+## Limits
+
+Generated text is a draft. The inherited template hardcodes version `1.0.0` and MIT labels, proposes package-install commands without proving publication, and includes placeholder repository URLs. Confirm the real license, version, repository URL and installation method before using its output. Malformed manifests can fall back to incomplete metadata rather than providing a full validation report.
+
+This repair restores startup and the existing README workflow; it does not implement semantic documentation extraction or guarantee adherence of generated output to the portfolio editorial standard.
+
+## Development and verification
+
 ```bash
-# Write README.md to the current project
-npx github:NickCirv/doc-gen readme
-
-# Analyse a different directory
-npx github:NickCirv/doc-gen readme --dir ./my-project
-
-# Preview without writing
-npx github:NickCirv/doc-gen readme --preview
+npm test
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--dir <path>` | Project root to analyse (default: current directory) |
-| `--preview` | Print to stdout instead of writing `README.md` |
+Seven tests passed on Node.js 26.7.0: entrypoint syntax plus behavior covering help, full preview, fixture output, invalid invocations and refusal of symlink/hardlink/directory targets. No Node 20 compatibility run or target-application execution was performed. The declared Node requirement is the existing manifest requirement, not a tested version matrix.
 
-## What it does
+## License and author
 
-`doc-gen` reads your project manifest, lockfiles, config files, and entry points to detect the language, framework, package manager, build tool, and test framework. It then writes a complete `README.md` with the correct install command, usage block, scripts table, and contributing guide for your actual stack — no templates to fill in, no guessing.
+[MIT license](LICENSE). [Nicholas Ashkar](https://nicholashkar.com#oxblood-contact) — applied AI, systems and consulting.
 
-Supports JavaScript, TypeScript, Python, Rust, Go, and Ruby. Detects Next.js, Express, FastAPI, Django, Gin, and 15+ other frameworks automatically.
-
----
-<sub>Node ≥18 · MIT · by <a href="https://github.com/NickCirv">NickCirv</a></sub>
+<a id="install"></a>
+<a id="what-it-does"></a>
+<a id="usage-and-reference"></a>
+<a id="limits-and-operational-notes"></a>
+<a id="research-and-status"></a>
